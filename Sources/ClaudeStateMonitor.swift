@@ -284,12 +284,9 @@ final class ClaudeStateMonitor: ObservableObject {
             return
         }
 
-        if line.contains("[IdleManager:session] Starting idle timeout") {
-            hasActiveSession = false
-            cancelLaunchingTimeout()
-            transition(to: .idle)
-            return
-        }
+        // Note: [IdleManager:session] fires constantly between tool calls
+        // (it just means "start a 900s countdown"). Not a real idle signal.
+        // The pill only hides when Claude.app terminates (process watcher).
 
         if line.contains("[CCD CycleHealth] unhealthy cycle") {
             let reason = extractCycleHealthReason(from: line)
