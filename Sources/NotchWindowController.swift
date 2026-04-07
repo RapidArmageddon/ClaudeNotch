@@ -81,7 +81,7 @@ final class NotchWindowController: NSObject {
         w.backgroundColor = .clear
         w.isOpaque = false
         w.hasShadow = false
-        w.ignoresMouseEvents = true
+        w.ignoresMouseEvents = false
         w.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
         w.isMovableByWindowBackground = false
         return w

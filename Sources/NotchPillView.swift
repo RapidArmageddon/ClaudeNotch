@@ -95,6 +95,7 @@ struct NotchPillView: View {
             if case .error = newState { shakeAnimation() }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .onTapGesture { Self.activateClaude() }
     }
 
     private var floatingLayout: some View {
@@ -112,6 +113,7 @@ struct NotchPillView: View {
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.72), value: monitor.state)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .onTapGesture { Self.activateClaude() }
     }
 
     // MARK: - Right Label (with multi-session alternation)
@@ -135,6 +137,19 @@ struct NotchPillView: View {
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.white.opacity(0.85))
                 .lineLimit(1)
+        }
+    }
+
+    // MARK: - Click to Activate Claude
+
+    private static func activateClaude() {
+        // Use AppleScript — the most reliable way to bring another app to front on macOS
+        let script = """
+        tell application "Claude" to activate
+        """
+        if let appleScript = NSAppleScript(source: script) {
+            var error: NSDictionary?
+            appleScript.executeAndReturnError(&error)
         }
     }
 
