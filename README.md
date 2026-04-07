@@ -102,10 +102,13 @@ Six files. ~500 lines of Swift. Zero dependencies.
 ## FAQ
 
 **Does it need any permissions?**
-No. It reads a log file in your home directory and observes running processes — both are standard macOS APIs that require no entitlements.
+No special permissions (no Accessibility, no Full Disk Access, no entitlements). It reads `~/Library/Logs/Claude/main.log`, which is owned by your user account and readable without elevation. It also uses `NSWorkspace` notifications to detect when Claude.app launches or quits — a standard public API.
+
+**How does it find Claude's logs?**
+The Claude Desktop app (Electron) writes its logs to `~/Library/Logs/Claude/main.log` — this is the standard Electron log path on macOS. ClaudeNotch tails this file for state transitions like session starts, tool executions, and query completions.
 
 **Does it work with Claude Code in the terminal?**
-Currently it monitors the Claude Desktop app's log file (`~/Library/Logs/Claude/main.log`). Terminal-only Claude Code support is planned.
+Currently it monitors the Claude Desktop app's log file. Terminal-only Claude Code support is planned.
 
 **Will it conflict with other notch apps?**
 It shouldn't — ClaudeNotch uses its own `NSWindow` at a high window level. If you see conflicts, please open an issue.
