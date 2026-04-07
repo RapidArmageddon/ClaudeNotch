@@ -11,7 +11,7 @@
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>1.1.0</string>
     <key>CFBundleExecutable</key>
     <string>ClaudeNotch</string>
     <key>CFBundlePackageType</key>
@@ -19,6 +19,12 @@
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>SUFeedURL</key>
+    <string>https://raw.githubusercontent.com/RapidArmageddon/ClaudeNotch/main/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>BG/YLf9HLuU9yMmCi6YEewGgHq291TIHL1Ll5Z2Ky6w=</string>
+    <key>SUEnableAutomaticChecks</key>
     <true/>
 </dict>
 </plist>

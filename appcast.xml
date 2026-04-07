@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>ClaudeNotch Updates</title>
+        <language>en</language>
+        <item>
+            <title>ClaudeNotch 1.1.0</title>
+            <pubDate>Mon, 07 Apr 2026 16:00:00 +0000</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <ul>
+                    <li>Audio chimes when Claude needs your attention</li>
+                    <li>Project name display in the notch</li>
+                    <li>Multi-session awareness with alternating labels</li>
+                    <li>Click the notch to bring Claude to foreground</li>
+                    <li>Settings toggles in the menu bar</li>
+                    <li>Auto-update support via Sparkle</li>
+                </ul>
+            ]]></description>
+            <enclosure
+                url="https://github.com/RapidArmageddon/ClaudeNotch/releases/download/v1.1.0/ClaudeNotch.zip"
+                length="3103961"
+                type="application/octet-stream"
+                sparkle:edSignature="bGH2ecBR/Vr5m8twjPfFm8o9HDcelO87mn4EBCbntxA/QvXNCokJb2OHhR+ohCgojFs6p1cyFFtMh8AOeR2KAQ=="
+            />
+        </item>
+    </channel>
+</rss>

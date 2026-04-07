@@ -1,11 +1,12 @@
 import AppKit
+import Sparkle
 
 final class MenuBarController {
     private var statusItem: NSStatusItem!
     private var soundsItem: NSMenuItem!
     private var showProjectNameItem: NSMenuItem!
 
-    func setup() {
+    func setup(updater: SPUUpdater) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.image = NSImage(systemSymbolName: "sparkles",
                                            accessibilityDescription: "ClaudeNotch")
@@ -27,6 +28,14 @@ final class MenuBarController {
         showProjectNameItem.target = self
         showProjectNameItem.state = Settings.shared.showProjectName ? .on : .off
         menu.addItem(showProjectNameItem)
+
+        menu.addItem(.separator())
+
+        let updateItem = NSMenuItem(title: "Check for Updates...",
+                                    action: #selector(SPUUpdater.checkForUpdates),
+                                    keyEquivalent: "")
+        updateItem.target = updater
+        menu.addItem(updateItem)
 
         menu.addItem(.separator())
 

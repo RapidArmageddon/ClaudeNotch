@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Combine
+import Sparkle
 
 @main
 struct ClaudeNotchApp: App {
@@ -17,9 +18,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let menuBar = MenuBarController()
     private var notchCtrl: NotchWindowController!
     private var cancellables = Set<AnyCancellable>()
+    private var updaterController: SPUStandardUpdaterController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        menuBar.setup()
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+        menuBar.setup(updater: updaterController.updater)
         notchCtrl = NotchWindowController(monitor: monitor)
 
         monitor.$state
