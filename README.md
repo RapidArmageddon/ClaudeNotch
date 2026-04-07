@@ -38,13 +38,13 @@ No dock icon. No floating windows. Just your notch, doing more.
 
 1. Grab `ClaudeNotch.zip` from the [latest release](../../releases/latest)
 2. Unzip and drag `ClaudeNotch.app` to `/Applications`
-3. **First launch:** Right-click the app → **Open** → click **Open** in the dialog (required once for unsigned apps)
-4. A sparkle icon appears in your menu bar — that's it. Open Claude Code and start working.
+3. Open Terminal and run:
+   ```bash
+   xattr -cr /Applications/ClaudeNotch.app
+   ```
+4. Open ClaudeNotch — a sparkle icon appears in your menu bar. That's it.
 
-> **"ClaudeNotch is damaged and can't be opened"?** Run this in Terminal, then open the app normally:
-> ```bash
-> xattr -cr /Applications/ClaudeNotch.app
-> ```
+> **Why the Terminal step?** ClaudeNotch isn't notarized with Apple (that requires a $99/yr developer account). The `xattr -cr` command removes the quarantine flag that macOS adds to downloaded apps. This is standard for open-source Mac utilities — you can verify the source code yourself.
 
 ### Build from source
 
