@@ -4,40 +4,43 @@ import SwiftUI
 final class NotchWindowController: NSObject {
     private var window: NSWindow!
     private let monitor: ClaudeStateMonitor
+    private let extensionWidth: CGFloat = 50
 
     init(monitor: ClaudeStateMonitor) {
         self.monitor = monitor
         super.init()
-        setupWindow()
+        rebuildWindow()
     }
 
-    private func setupWindow() {
-        guard let screen = NSScreen.main else { return }
-        guard let notchInfo = Self.notchInfo(for: screen) else {
-            // No notch — use a simple centered floating window
+    /// Tear down and recreate the window for the current screen topology.
+    /// Handles switching between notched and non-notched displays.
+    func rebuildWindow() {
+        window?.orderOut(nil)
+        window = nil
+
+        // Prefer the built-in notch screen over NSScreen.main
+        if let notchScreen = Self.notchedScreen(),
+           let notchInfo = Self.notchInfo(for: notchScreen) {
+            setupNotchWindow(notchInfo: notchInfo)
+        } else if let screen = NSScreen.main {
             setupFloatingWindow(on: screen)
-            return
         }
+    }
 
-        // The window spans from left extension through the notch gap to right extension.
-        // We position it using absolute screen coordinates.
-        let extensionWidth: CGFloat = 50  // width of each side panel
+    private func setupNotchWindow(notchInfo: NotchGeometry) {
         let windowX = notchInfo.leftEdge - extensionWidth
-        let windowWidth = extensionWidth + notchInfo.width + extensionWidth + 30  // +40 for right text
-        let windowHeight: CGFloat = notchInfo.height + 18  // extra for shadow below
-
-        // In NS coordinates: y is from bottom
-        let windowY = notchInfo.bottomY - 18  // extend below for shadow
+        let windowWidth = extensionWidth + notchInfo.width + extensionWidth
+        let windowHeight: CGFloat = notchInfo.height + 18
+        let windowY = notchInfo.bottomY - 18
 
         let frame = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
-
         window = makeWindow(frame: frame)
 
         let pillView = NotchPillView(
             monitor: monitor,
             notchWidth: notchInfo.width,
             leftExtensionWidth: extensionWidth,
-            rightExtensionWidth: extensionWidth + 30,
+            rightExtensionWidth: extensionWidth,
             notchHeight: notchInfo.height
         )
         window.contentView = NSHostingView(rootView: pillView)
@@ -81,31 +84,34 @@ final class NotchWindowController: NSObject {
         return w
     }
 
-    func repositionForCurrentScreen() {
-        guard let screen = NSScreen.main else { return }
-        guard let notchInfo = Self.notchInfo(for: screen) else { return }
+    // MARK: - Screen Detection
 
-        let extensionWidth: CGFloat = 50
-        let windowX = notchInfo.leftEdge - extensionWidth
-        let windowWidth = extensionWidth + notchInfo.width + extensionWidth + 30
-        let windowHeight: CGFloat = notchInfo.height + 18
-        let windowY = notchInfo.bottomY - 18
-
-        let frame = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
-        window.setFrame(frame, display: true)
+    /// Find the built-in notched screen, regardless of which display is "main"
+    static func notchedScreen() -> NSScreen? {
+        return NSScreen.screens.first { $0.auxiliaryTopLeftArea != nil }
     }
 
     struct NotchGeometry {
-        let leftEdge: CGFloat   // NS x-coordinate of notch left edge
-        let width: CGFloat      // notch width in points
-        let height: CGFloat     // notch height in points
-        let bottomY: CGFloat    // NS y-coordinate of notch bottom edge
+        let leftEdge: CGFloat
+        let width: CGFloat
+        let height: CGFloat
+        let bottomY: CGFloat
+    }
+
+    /// Hide window from compositor — zero GPU cost while idle
+    func hideWindow() {
+        window?.orderOut(nil)
+    }
+
+    /// Show window again
+    func showWindow() {
+        window?.orderFrontRegardless()
     }
 
     static func notchInfo(for screen: NSScreen) -> NotchGeometry? {
         guard let auxLeft = screen.auxiliaryTopLeftArea else { return nil }
         let leftEdge = auxLeft.maxX
-        let rightEdge = screen.frame.width - auxLeft.width  // symmetric
+        let rightEdge = screen.frame.width - auxLeft.width
         return NotchGeometry(
             leftEdge: leftEdge,
             width: rightEdge - leftEdge,

@@ -2,7 +2,6 @@ import SwiftUI
 
 struct NotchPillView: View {
     @ObservedObject var monitor: ClaudeStateMonitor
-    @State private var pulse = false
     @State private var shakeOffset: CGFloat = 0
 
     let notchWidth: CGFloat
@@ -18,12 +17,12 @@ struct NotchPillView: View {
         case .idle:
             return nil
         case .launching:
-            return ("Starting...", "bolt.fill")
+            return ("Starting", "bolt.fill")
         case .processing(let tool):
-            if tool != nil {
-                return ("Running \(tool!)", "gearshape.fill")
+            if let tool {
+                return (tool, "gearshape.fill")
             }
-            return ("Thinking...", "sparkles")
+            return ("Thinking", "sparkles")
         case .waitingForInput:
             return ("Waiting", "hand.raised.fill")
         case .error:
@@ -32,6 +31,10 @@ struct NotchPillView: View {
     }
 
     private var isActive: Bool { pillContent != nil }
+    private var isProcessing: Bool {
+        if case .processing = monitor.state { return true }
+        return false
+    }
     private var totalWidth: CGFloat { leftExtensionWidth + notchWidth + rightExtensionWidth }
 
     var body: some View {
@@ -45,8 +48,6 @@ struct NotchPillView: View {
     private var notchedLayout: some View {
         ZStack {
             if let content = pillContent {
-                // One continuous black shape spanning the full width.
-                // The physical notch hides the center — the sides are visible.
                 UnevenRoundedRectangle(
                     topLeadingRadius: 0,
                     bottomLeadingRadius: cornerRadius,
@@ -57,19 +58,15 @@ struct NotchPillView: View {
                 .fill(Color.black)
                 .frame(width: totalWidth, height: notchHeight)
 
-                // Icon on the left side
+                // Icon on the left — uses low-fps opacity pulse instead of scaleEffect
                 HStack {
-                    Image(systemName: content.icon)
-                        .font(.system(size: 13, weight: .semibold))
-                        .scaleEffect(pulse ? 1.12 : 1.0)
-                        .foregroundStyle(claudeOrange)
+                    pulsingIcon(name: content.icon)
                         .frame(width: leftExtensionWidth)
-
                     Spacer()
                 }
                 .frame(width: totalWidth, height: notchHeight)
 
-                // Text on the right side
+                // Text on the right
                 HStack {
                     Spacer()
                     Text(content.label)
@@ -86,9 +83,7 @@ struct NotchPillView: View {
         .animation(.spring(response: 0.4, dampingFraction: 0.78), value: isActive)
         .animation(.spring(response: 0.35, dampingFraction: 0.72), value: monitor.state)
         .onChange(of: monitor.state) { _, newState in
-            stopPulse()
             shakeOffset = 0
-            if case .processing = newState { startPulse() }
             if case .error = newState { shakeAnimation() }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -98,10 +93,7 @@ struct NotchPillView: View {
         ZStack {
             if let content = pillContent {
                 HStack(spacing: 6) {
-                    Image(systemName: content.icon)
-                        .font(.system(size: 11, weight: .semibold))
-                        .scaleEffect(pulse ? 1.12 : 1.0)
-                        .foregroundStyle(claudeOrange)
+                    pulsingIcon(name: content.icon)
                     Text(content.label)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.white.opacity(0.85))
@@ -113,21 +105,30 @@ struct NotchPillView: View {
             }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.72), value: monitor.state)
-        .onChange(of: monitor.state) { _, newState in
-            stopPulse()
-            if case .processing = newState { startPulse() }
-        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
-    private func startPulse() {
-        withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
-            pulse = true
-        }
-    }
+    // MARK: - Pulsing Icon (energy-efficient)
 
-    private func stopPulse() {
-        withAnimation(.easeOut(duration: 0.2)) { pulse = false }
+    /// Uses TimelineView at ~2 fps to drive a gentle opacity pulse.
+    /// Only active during .processing state. Costs ~2 compositor
+    /// frames/sec instead of 120.
+    @ViewBuilder
+    private func pulsingIcon(name: String) -> some View {
+        if isProcessing {
+            TimelineView(.periodic(from: .now, by: 0.5)) { timeline in
+                let seconds = timeline.date.timeIntervalSinceReferenceDate
+                // Sine wave oscillation: period = 2.2s, range 0.5 – 1.0
+                let opacity = 0.75 + 0.25 * sin(seconds * .pi / 1.1)
+                Image(systemName: name)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(claudeOrange.opacity(opacity))
+            }
+        } else {
+            Image(systemName: name)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(claudeOrange)
+        }
     }
 
     private func shakeAnimation() {

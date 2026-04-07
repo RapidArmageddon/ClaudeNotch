@@ -26,6 +26,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 self?.menuBar.update(for: state)
+                if state == .idle {
+                    self?.notchCtrl.hideWindow()
+                } else {
+                    self?.notchCtrl.showWindow()
+                }
             }
             .store(in: &cancellables)
 
@@ -40,6 +45,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func screenChanged() {
-        notchCtrl.repositionForCurrentScreen()
+        notchCtrl.rebuildWindow()
     }
 }
