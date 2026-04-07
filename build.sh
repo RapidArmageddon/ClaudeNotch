@@ -20,5 +20,8 @@ cp "$BUILD_DIR/$PRODUCT_NAME" "$MACOS_DIR/$PRODUCT_NAME"
 # Copy Info.plist
 cp Sources/Info.plist "$CONTENTS_DIR/Info.plist"
 
+# Ad-hoc sign so macOS doesn't flag it as damaged
+codesign --force --deep --sign - "$APP_DIR"
+
 echo "App bundle created at: $APP_DIR"
 echo "To run: open $APP_DIR"
