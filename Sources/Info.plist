@@ -7,7 +7,7 @@
     <key>CFBundleName</key>
     <string>ClaudeNotch</string>
     <key>CFBundleIdentifier</key>
-    <string>com.louisdeleuil.claudenotch</string>
+    <string>com.claudenotch.app</string>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>

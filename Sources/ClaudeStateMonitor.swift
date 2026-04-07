@@ -89,9 +89,16 @@ final class ClaudeStateMonitor: ObservableObject {
     private var hasActiveSession = false
     private var launchingTimeout: DispatchWorkItem?
 
+    /// Discovers the Claude Desktop log path.
+    /// Checks standard location: ~/Library/Logs/Claude/main.log
     private let logPath: String = {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return "\(home)/Library/Logs/Claude/main.log"
+        let candidates = [
+            "\(home)/Library/Logs/Claude/main.log",
+        ]
+        // Return the first path that exists, or the primary candidate as default
+        return candidates.first { FileManager.default.fileExists(atPath: $0) }
+            ?? candidates[0]
     }()
 
     private var logDirPath: String {
