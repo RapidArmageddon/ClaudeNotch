@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NotchPillView: View {
     @ObservedObject var monitor: ClaudeStateMonitor
+    @ObservedObject var settings: Settings
     @State private var shakeOffset: CGFloat = 0
 
     let notchWidth: CGFloat
@@ -17,6 +18,9 @@ struct NotchPillView: View {
         case .idle:
             return nil
         case .launching:
+            if settings.showProjectName, let name = monitor.activeProjectName {
+                return (name, "bolt.fill")
+            }
             return ("Starting", "bolt.fill")
         case .processing(let tool):
             if let tool {
@@ -36,6 +40,13 @@ struct NotchPillView: View {
         return false
     }
     private var totalWidth: CGFloat { leftExtensionWidth + notchWidth + rightExtensionWidth }
+
+    /// Whether to alternate between project name and state label
+    private var shouldAlternate: Bool {
+        settings.showProjectName
+            && monitor.activeSessionCount > 1
+            && monitor.activeProjectName != nil
+    }
 
     var body: some View {
         if notchWidth > 0 {
@@ -58,7 +69,7 @@ struct NotchPillView: View {
                 .fill(Color.black)
                 .frame(width: totalWidth, height: notchHeight)
 
-                // Icon on the left — uses low-fps opacity pulse instead of scaleEffect
+                // Icon on the left
                 HStack {
                     pulsingIcon(name: content.icon)
                         .frame(width: leftExtensionWidth)
@@ -66,13 +77,10 @@ struct NotchPillView: View {
                 }
                 .frame(width: totalWidth, height: notchHeight)
 
-                // Text on the right
+                // Text on the right — alternates with project name in multi-session
                 HStack {
                     Spacer()
-                    Text(content.label)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.85))
-                        .lineLimit(1)
+                    rightLabel(stateLabel: content.label)
                         .frame(width: rightExtensionWidth, alignment: .leading)
                         .padding(.leading, 8)
                 }
@@ -94,9 +102,7 @@ struct NotchPillView: View {
             if let content = pillContent {
                 HStack(spacing: 6) {
                     pulsingIcon(name: content.icon)
-                    Text(content.label)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.85))
+                    rightLabel(stateLabel: content.label)
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 5)
@@ -108,17 +114,37 @@ struct NotchPillView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
+    // MARK: - Right Label (with multi-session alternation)
+
+    @ViewBuilder
+    private func rightLabel(stateLabel: String) -> some View {
+        if shouldAlternate {
+            // Alternate project name and state label every 2 seconds
+            TimelineView(.periodic(from: .now, by: 2.0)) { timeline in
+                let showProject = Int(timeline.date.timeIntervalSinceReferenceDate) % 4 < 2
+                let label = showProject ? (monitor.activeProjectName ?? stateLabel) : stateLabel
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .lineLimit(1)
+                    .contentTransition(.opacity)
+                    .animation(.easeInOut(duration: 0.3), value: label)
+            }
+        } else {
+            Text(stateLabel)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.white.opacity(0.85))
+                .lineLimit(1)
+        }
+    }
+
     // MARK: - Pulsing Icon (energy-efficient)
 
-    /// Uses TimelineView at ~2 fps to drive a gentle opacity pulse.
-    /// Only active during .processing state. Costs ~2 compositor
-    /// frames/sec instead of 120.
     @ViewBuilder
     private func pulsingIcon(name: String) -> some View {
         if isProcessing {
             TimelineView(.periodic(from: .now, by: 0.5)) { timeline in
                 let seconds = timeline.date.timeIntervalSinceReferenceDate
-                // Sine wave oscillation: period = 2.2s, range 0.5 – 1.0
                 let opacity = 0.75 + 0.25 * sin(seconds * .pi / 1.1)
                 Image(systemName: name)
                     .font(.system(size: 13, weight: .semibold))

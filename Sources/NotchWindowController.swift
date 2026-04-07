@@ -39,6 +39,7 @@ final class NotchWindowController: NSObject {
 
         let pillView = NotchPillView(
             monitor: monitor,
+            settings: Settings.shared,
             notchWidth: notchInfo.width,
             leftExtensionWidth: extensionWidth,
             rightExtensionWidth: extensionWidth,
@@ -59,6 +60,7 @@ final class NotchWindowController: NSObject {
 
         let pillView = NotchPillView(
             monitor: monitor,
+            settings: Settings.shared,
             notchWidth: 0,
             leftExtensionWidth: 0,
             rightExtensionWidth: 0,

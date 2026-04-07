@@ -7,7 +7,7 @@ struct ClaudeNotchApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        Settings { EmptyView() }
+        SwiftUI.Settings { EmptyView() }
     }
 }
 
@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 } else {
                     self?.notchCtrl.showWindow()
                 }
+                self?.playChime(for: state)
             }
             .store(in: &cancellables)
 
@@ -46,5 +47,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func screenChanged() {
         notchCtrl.rebuildWindow()
+    }
+
+    private func playChime(for state: ClaudeState) {
+        guard Settings.shared.soundsEnabled else { return }
+        let soundName: String?
+        switch state {
+        case .waitingForInput:
+            soundName = monitor.isPermissionRequest ? "Pop" : "Tink"
+        case .error:
+            soundName = "Basso"
+        default:
+            soundName = nil
+        }
+        if let name = soundName {
+            NSSound(named: NSSound.Name(name))?.play()
+        }
     }
 }

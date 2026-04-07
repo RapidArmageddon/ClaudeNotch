@@ -81,6 +81,10 @@ private final class LogFileReader: @unchecked Sendable {
 @MainActor
 final class ClaudeStateMonitor: ObservableObject {
     @Published private(set) var state: ClaudeState = .idle
+    @Published private(set) var activeProjectName: String? = nil
+    @Published private(set) var activeSessionCount: Int = 0
+    @Published private(set) var isPermissionRequest: Bool = false
+    private var sessions: [String: String] = [:]  // sessionID -> projectName
 
     private var logSource: DispatchSourceFileSystemObject?
     private var dirSource: DispatchSourceFileSystemObject?
@@ -141,6 +145,9 @@ final class ClaudeStateMonitor: ObservableObject {
               app.bundleIdentifier == "com.anthropic.claude" else { return }
         claudeIsRunning = false
         hasActiveSession = false
+        sessions.removeAll()
+        activeProjectName = nil
+        activeSessionCount = 0
         cancelLaunchingTimeout()
         transition(to: .idle)
     }
@@ -260,8 +267,23 @@ final class ClaudeStateMonitor: ObservableObject {
     // MARK: - Log Parsing
 
     private func parseLogLine(_ line: String) {
-        if line.contains("LocalSessions.start") ||
-           line.contains("LocalAgentModeSessions.start") {
+        // Extract project name from "Starting local session local_UUID in /path/to/project"
+        if line.contains("Starting local session") {
+            if let sessionId = extractSessionId(from: line),
+               let projectPath = extractProjectPath(from: line) {
+                let projectName = (projectPath as NSString).lastPathComponent
+                sessions[sessionId] = projectName
+                activeProjectName = projectName
+                activeSessionCount = sessions.count
+            }
+            hasActiveSession = true
+            startLaunchingTimeout()
+            transition(to: .launching)
+            return
+        }
+
+        // Fallback for agent mode sessions that don't log the full line
+        if line.contains("LocalAgentModeSessions.start") {
             hasActiveSession = true
             startLaunchingTimeout()
             transition(to: .launching)
@@ -271,22 +293,26 @@ final class ClaudeStateMonitor: ObservableObject {
         if line.contains("LocalSessions.sendMessage") {
             hasActiveSession = true
             cancelLaunchingTimeout()
+            isPermissionRequest = false
             transition(to: .processing(tool: nil))
             return
         }
 
         if line.contains("Emitted tool permission request") {
+            isPermissionRequest = true
             transition(to: .waitingForInput)
             return
         }
 
         if line.contains("Received permission response") {
+            isPermissionRequest = false
             let tool = extractToolName(from: line)
             transition(to: .processing(tool: tool))
             return
         }
 
         if line.contains("[Stop hook] Query completed") {
+            isPermissionRequest = false
             transition(to: .waitingForInput)
             return
         }
@@ -305,9 +331,23 @@ final class ClaudeStateMonitor: ObservableObject {
             case "cli_execution_error": message = "CLI error"
             default:                    message = reason ?? "Error"
             }
+            isPermissionRequest = false
             transition(to: .error(message: message))
             return
         }
+    }
+
+    private func extractSessionId(from line: String) -> String? {
+        guard let range = line.range(of: "local_") else { return nil }
+        let after = line[range.lowerBound...]
+        let end = after.firstIndex(of: " ") ?? after.endIndex
+        return String(after[after.startIndex..<end])
+    }
+
+    private func extractProjectPath(from line: String) -> String? {
+        guard let range = line.range(of: " in /") else { return nil }
+        let path = line[line.index(range.lowerBound, offsetBy: 4)...]
+        return String(path).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func extractToolName(from line: String) -> String? {
