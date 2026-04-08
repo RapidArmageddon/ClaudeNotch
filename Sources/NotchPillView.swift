@@ -143,14 +143,9 @@ struct NotchPillView: View {
     // MARK: - Click to Activate Claude
 
     private static func activateClaude() {
-        // Use AppleScript — the most reliable way to bring another app to front on macOS
-        let script = """
-        tell application "Claude" to activate
-        """
-        if let appleScript = NSAppleScript(source: script) {
-            var error: NSDictionary?
-            appleScript.executeAndReturnError(&error)
-        }
+        let apps = NSRunningApplication.runningApplications(withBundleIdentifier: "com.anthropic.claudefordesktop")
+        guard let claude = apps.first else { return }
+        claude.activate()
     }
 
     // MARK: - Pulsing Icon (energy-efficient)
