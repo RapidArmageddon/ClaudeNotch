@@ -11,7 +11,7 @@
     <a href="../../releases"><img src="https://img.shields.io/github/downloads/RapidArmageddon/ClaudeNotch/total?style=flat-square&color=green" alt="Downloads"></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/RapidArmageddon/ClaudeNotch?style=flat-square" alt="MIT License"></a>
     <img src="https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey?style=flat-square" alt="macOS 14+">
-    <img src="https://img.shields.io/badge/dependencies-zero-orange?style=flat-square" alt="Zero Dependencies">
+    <img src="https://img.shields.io/badge/dependencies-Sparkle-orange?style=flat-square" alt="Sparkle">
   </p>
 </p>
 
@@ -57,7 +57,7 @@ bash build.sh
 open .build/release/ClaudeNotch.app
 ```
 
-Requires Xcode 16+ and macOS 14 Sonoma or later. Zero dependencies.
+Requires Xcode 16+ and macOS 14 Sonoma or later. Only dependency is [Sparkle](https://sparkle-project.org) for auto-updates (fetched automatically by Swift Package Manager).
 
 ## How It Works
 
@@ -106,7 +106,7 @@ ClaudeNotchApp (LSUIElement — no dock icon)
 └── ClaudeState            — enum: idle | launching | processing | waiting | error
 ```
 
-Six files. ~500 lines of Swift. Zero dependencies.
+Seven files. ~900 lines of Swift. One dependency (Sparkle for auto-updates).
 
 ## FAQ
 
@@ -126,7 +126,7 @@ It shouldn't — ClaudeNotch uses its own `NSWindow` at a high window level. If 
 Click the sparkle icon in your menu bar and select "Quit".
 
 **Does it phone home or collect data?**
-No. It reads one local log file. No network requests, no analytics, no telemetry. Check the source — it's 500 lines.
+No. It reads one local log file. Sparkle checks for updates via the appcast feed — that's the only network request. No analytics, no telemetry. Check the source — it's ~900 lines.
 
 ## Contributing
 
