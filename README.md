@@ -40,13 +40,9 @@ No dock icon. No floating windows. Just your notch, doing more.
 
 1. Grab `ClaudeNotch.zip` from the [latest release](../../releases/latest)
 2. Unzip and drag `ClaudeNotch.app` to `/Applications`
-3. Open Terminal and run:
-   ```bash
-   xattr -cr /Applications/ClaudeNotch.app
-   ```
-4. Open ClaudeNotch — a sparkle icon appears in your menu bar. That's it.
+3. Open ClaudeNotch — a sparkle icon appears in your menu bar. That's it.
 
-> **Why the Terminal step?** ClaudeNotch isn't notarized with Apple (that requires a $99/yr developer account). The `xattr -cr` command removes the quarantine flag that macOS adds to downloaded apps. This is standard for open-source Mac utilities — you can verify the source code yourself.
+ClaudeNotch is signed and notarized with Apple, so macOS will open it without any warnings.
 
 ### Build from source
 
