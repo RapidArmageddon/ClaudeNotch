@@ -30,6 +30,8 @@ ClaudeNotch turns your MacBook's notch into a live status indicator. It seamless
 - **Waiting** — Claude is done, your turn
 - **Stopped** — something went wrong
 
+Click the notch to jump straight back — it brings the right app to the foreground automatically (Claude Desktop or Terminal, depending on which session is active).
+
 No dock icon. No floating windows. Just your notch, doing more.
 
 ## Install
@@ -96,8 +98,10 @@ ClaudeNotch is designed to be invisible to your battery:
 ```
 ClaudeNotchApp (LSUIElement — no dock icon)
 ├── ClaudeStateMonitor     — tails main.log + NSWorkspace notifications
+│                            tracks session source (Desktop vs CLI)
 ├── NotchWindowController  — borderless NSWindow in the notch
 │   └── NotchPillView      — SwiftUI view with state-driven content
+│                            click activates Desktop or Terminal based on session
 ├── MenuBarController      — status bar icon + quit menu
 └── ClaudeState            — enum: idle | launching | processing | waiting | error
 ```
@@ -113,7 +117,7 @@ No special permissions (no Accessibility, no Full Disk Access, no entitlements).
 The Claude Desktop app (Electron) writes its logs to `~/Library/Logs/Claude/main.log` — this is the standard Electron log path on macOS. ClaudeNotch tails this file for state transitions like session starts, tool executions, and query completions.
 
 **Does it work with Claude Code in the terminal?**
-Currently it monitors the Claude Desktop app's log file. Terminal-only Claude Code support is planned.
+Yes. ClaudeNotch detects whether the active session is Claude Desktop or Claude Code (CLI) and activates the correct app when you click the notch — Claude Desktop for desktop sessions, Terminal.app for CLI sessions. Both session types write to the same log file, so state detection works identically.
 
 **Will it conflict with other notch apps?**
 It shouldn't — ClaudeNotch uses its own `NSWindow` at a high window level. If you see conflicts, please open an issue.
