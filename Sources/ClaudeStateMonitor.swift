@@ -78,12 +78,18 @@ private final class LogFileReader: @unchecked Sendable {
     }
 }
 
+enum SessionSource {
+    case desktop
+    case cli
+}
+
 @MainActor
 final class ClaudeStateMonitor: ObservableObject {
     @Published private(set) var state: ClaudeState = .idle
     @Published private(set) var activeProjectName: String? = nil
     @Published private(set) var activeSessionCount: Int = 0
     @Published private(set) var isPermissionRequest: Bool = false
+    @Published private(set) var activeSessionSource: SessionSource = .desktop
     private var sessions: [String: String] = [:]  // sessionID -> projectName
 
     private var logSource: DispatchSourceFileSystemObject?
@@ -285,13 +291,24 @@ final class ClaudeStateMonitor: ObservableObject {
         // Fallback for agent mode sessions that don't log the full line
         if line.contains("LocalAgentModeSessions.start") {
             hasActiveSession = true
+            activeSessionSource = .cli
             startLaunchingTimeout()
             transition(to: .launching)
             return
         }
 
+        if line.contains("LocalAgentModeSessions.sendMessage") {
+            hasActiveSession = true
+            activeSessionSource = .cli
+            cancelLaunchingTimeout()
+            isPermissionRequest = false
+            transition(to: .processing(tool: nil))
+            return
+        }
+
         if line.contains("LocalSessions.sendMessage") {
             hasActiveSession = true
+            activeSessionSource = .desktop
             cancelLaunchingTimeout()
             isPermissionRequest = false
             transition(to: .processing(tool: nil))

@@ -95,7 +95,7 @@ struct NotchPillView: View {
             if case .error = newState { shakeAnimation() }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .onTapGesture { Self.activateClaude() }
+        .onTapGesture { self.activateClaude() }
     }
 
     private var floatingLayout: some View {
@@ -113,7 +113,7 @@ struct NotchPillView: View {
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.72), value: monitor.state)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-        .onTapGesture { Self.activateClaude() }
+        .onTapGesture { self.activateClaude() }
     }
 
     // MARK: - Right Label (with multi-session alternation)
@@ -142,10 +142,16 @@ struct NotchPillView: View {
 
     // MARK: - Click to Activate Claude
 
-    private static func activateClaude() {
-        let apps = NSRunningApplication.runningApplications(withBundleIdentifier: "com.anthropic.claudefordesktop")
-        guard let claude = apps.first else { return }
-        claude.activate()
+    private func activateClaude() {
+        let bundleId: String
+        switch monitor.activeSessionSource {
+        case .desktop:
+            bundleId = "com.anthropic.claudefordesktop"
+        case .cli:
+            bundleId = "com.apple.Terminal"
+        }
+        guard let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first else { return }
+        app.activate()
     }
 
     // MARK: - Pulsing Icon (energy-efficient)
